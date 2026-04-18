@@ -12,8 +12,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SofiaProduction">
         <receiver
-            android:name=".PowerWidget"
-            android:exported="false">
+            android:name=".SofiaWidgetProvider"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
