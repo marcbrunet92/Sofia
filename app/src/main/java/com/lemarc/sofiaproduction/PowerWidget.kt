@@ -6,6 +6,11 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.widget.RemoteViews
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -45,6 +50,9 @@ class SofiaWidgetProvider : AppWidgetProvider() {
     companion object {
         const val WORKER_TAG = "sofia_widget_refresh"
 
+        private const val RING_SIZE_PX = 240
+        private const val TOTAL_MW = 1_400.0
+
         fun updateWidget(
             context: Context,
             manager: AppWidgetManager,
@@ -64,22 +72,62 @@ class SofiaWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
+            val percent = if (mw != null) {
+                ((mw / TOTAL_MW) * 100).toInt().coerceIn(0, 100)
+            } else 0
+
+            // Circular progress ring
+            views.setImageViewBitmap(R.id.iv_widget_ring, createRingBitmap(percent))
+
             if (mw != null) {
+                views.setTextViewText(R.id.tv_widget_percent, "$percent%")
                 views.setTextViewText(R.id.tv_widget_mw, "${mw.toInt()} MW")
-                views.setTextViewText(R.id.tv_widget_cf, "${cf ?: 0}% CF")
                 views.setTextViewText(R.id.tv_widget_status, status ?: "—")
                 views.setTextViewText(
                     R.id.tv_widget_source,
                     if (source == "b1610") "Metered" else "Forecast"
                 )
             } else {
+                views.setTextViewText(R.id.tv_widget_percent, "—")
                 views.setTextViewText(R.id.tv_widget_mw, "— MW")
-                views.setTextViewText(R.id.tv_widget_cf, "")
                 views.setTextViewText(R.id.tv_widget_status, "Updating…")
                 views.setTextViewText(R.id.tv_widget_source, "")
             }
 
             manager.updateAppWidget(widgetId, views)
+        }
+
+        /**
+         * Draws a circular arc ring: a dim full-circle track and a cyan progress arc.
+         * The arc starts at the top (−90°) and sweeps clockwise by [percent]/100 × 360°.
+         */
+        private fun createRingBitmap(percent: Int): Bitmap {
+            val size = RING_SIZE_PX
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeCap = Paint.Cap.ROUND
+            }
+
+            val strokeWidth = size * 0.12f
+            val inset = strokeWidth / 2f
+            val oval = RectF(inset, inset, size - inset, size - inset)
+
+            // Track (dim background ring)
+            paint.strokeWidth = strokeWidth
+            paint.color = Color.argb(48, 255, 255, 255)
+            canvas.drawArc(oval, -90f, 360f, false, paint)
+
+            // Progress arc (cyan)
+            if (percent > 0) {
+                paint.color = Color.parseColor("#00D4FF")
+                val sweep = 360f * percent / 100f
+                canvas.drawArc(oval, -90f, sweep, false, paint)
+            }
+
+            return bitmap
         }
 
         private fun scheduleWidgetWorker(context: Context) {
