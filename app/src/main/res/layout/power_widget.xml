@@ -1,19 +1,68 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.SofiaProduction.AppWidget.Container"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@style/Theme.SofiaProduction.AppWidgetContainer">
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:background="@drawable/widget_bg"
+    android:padding="16dp">
 
+    <!-- Farm label -->
     <TextView
-        android:id="@+id/appwidget_text"
-        style="@style/Widget.SofiaProduction.AppWidget.InnerView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="8dp"
-        android:contentDescription="@string/appwidget_text"
-        android:text="@string/appwidget_text"
-        android:textSize="24sp"
-        android:textStyle="bold|italic" />
-</RelativeLayout>
+        android:text="Sofia Wind Farm"
+        android:textColor="#80FFFFFF"
+        android:textSize="10sp" />
+
+    <!-- MW headline -->
+    <TextView
+        android:id="@+id/tv_widget_mw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="— MW"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:layout_marginTop="2dp" />
+
+    <!-- Capacity factor -->
+    <TextView
+        android:id="@+id/tv_widget_cf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#00D4FF"
+        android:textSize="14sp"
+        android:layout_marginTop="2dp" />
+
+    <!-- Divider -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#20FFFFFF"
+        android:layout_marginVertical="8dp" />
+
+    <!-- Status + source row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_widget_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#CCFFFFFF"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tv_widget_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#60FFFFFF"
+            android:textSize="10sp" />
+    </LinearLayout>
+</LinearLayout>

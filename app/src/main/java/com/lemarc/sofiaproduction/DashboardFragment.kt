@@ -1,0 +1,253 @@
+package com.lemarc.sofiaproduction
+
+import android.graphics.Color
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.lemarc.sofiaproduction.databinding.FragmentDashboardBinding
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+
+class DashboardFragment : Fragment() {
+
+    private var _binding: FragmentDashboardBinding? = null
+    private val binding get() = _binding!!
+
+    private val vm: DashboardViewModel by viewModels()
+
+    private val hourFmt = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneOffset.UTC)
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupChart()
+        setupSwipeRefresh()
+        observeState()
+    }
+
+    // ── SwipeRefreshLayout ───────────────────────
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener { vm.refresh() }
+        binding.swipeRefresh.setColorSchemeResources(R.color.accent_cyan)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.refreshing.collect { binding.swipeRefresh.isRefreshing = it }
+            }
+        }
+    }
+
+    // ── State observation ────────────────────────
+
+    private fun observeState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.uiState.collect { state ->
+                    when (state) {
+                        is UiState.Loading -> showLoading()
+                        is UiState.Success -> showSnapshot(state.snapshot)
+                        is UiState.Error   -> showError(state.message)
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Loading / Error ──────────────────────────
+
+    private fun showLoading() {
+        binding.contentGroup.visibility = View.GONE
+        binding.errorGroup.visibility   = View.GONE
+        binding.loadingGroup.visibility = View.VISIBLE
+    }
+
+    private fun showError(msg: String) {
+        binding.loadingGroup.visibility = View.GONE
+        binding.contentGroup.visibility = View.GONE
+        binding.errorGroup.visibility   = View.VISIBLE
+        binding.tvError.text = getString(R.string.error_template, msg)
+        binding.btnRetry.setOnClickListener { vm.refresh() }
+    }
+
+    // ── Success / Snapshot ───────────────────────
+
+    private fun showSnapshot(snap: FarmSnapshot) {
+        binding.loadingGroup.visibility = View.GONE
+        binding.errorGroup.visibility   = View.GONE
+        binding.contentGroup.visibility = View.VISIBLE
+
+        // Headline numbers
+        binding.tvCurrentMw.text = getString(R.string.mw_template, snap.latestMW.toInt())
+        val pct = (snap.capacityFactor * 100).toInt()
+        binding.tvCapacityFactor.text = getString(R.string.cf_template, pct)
+        binding.progressCapacity.progress = pct
+
+        // Source badge
+        binding.tvSource.text = if (snap.source == "b1610") "Metered ✓" else "Forecast ~"
+        binding.tvSource.setTextColor(
+            ContextCompat.getColor(
+                requireContext(),
+                if (snap.source == "b1610") R.color.accent_cyan else R.color.accent_amber
+            )
+        )
+
+        // Last updated
+        val updatedLabel = runCatching {
+            val inst = Instant.parse(snap.lastUpdated)
+            hourFmt.format(inst) + " UTC"
+        }.getOrDefault("—")
+        binding.tvLastUpdated.text = getString(R.string.updated_template, updatedLabel)
+
+        // Status banner
+        renderStatusBanner(snap)
+
+        // 24h chart
+        renderChart(snap.history)
+
+        // Notifications list
+        renderNotices(snap.activeNotices)
+    }
+
+    // ── Status banner ────────────────────────────
+
+    private fun renderStatusBanner(snap: FarmSnapshot) {
+        val bannerColor = when {
+            snap.activeNotices.any { it.unavailabilityType == "Unplanned" } ->
+                ContextCompat.getColor(requireContext(), R.color.status_red)
+            snap.activeNotices.isNotEmpty() ->
+                ContextCompat.getColor(requireContext(), R.color.accent_amber)
+            snap.latestMW > 0 ->
+                ContextCompat.getColor(requireContext(), R.color.status_green)
+            else ->
+                ContextCompat.getColor(requireContext(), R.color.status_grey)
+        }
+        binding.viewStatusDot.setBackgroundColor(bannerColor)
+        binding.tvStatus.text = snap.statusLabel
+        binding.tvStatus.setTextColor(bannerColor)
+    }
+
+    // ── 24h Line chart ───────────────────────────
+
+    private fun setupChart() {
+        binding.chart.apply {
+            description.isEnabled = false
+            legend.isEnabled      = false
+            setTouchEnabled(true)
+            isDragEnabled         = true
+            setScaleEnabled(false)
+            setDrawGridBackground(false)
+            setBackgroundColor(Color.TRANSPARENT)
+
+            xAxis.apply {
+                position         = XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                textColor        = Color.parseColor("#80FFFFFF")
+                textSize         = 9f
+                granularity      = 1f
+            }
+            axisLeft.apply {
+                setDrawGridLines(true)
+                gridColor        = Color.parseColor("#1AFFFFFF")
+                textColor        = Color.parseColor("#80FFFFFF")
+                textSize         = 9f
+                axisMinimum      = 0f
+                axisMaximum      = INSTALLED_MW.toFloat()
+            }
+            axisRight.isEnabled = false
+        }
+    }
+
+    private fun renderChart(history: List<GenerationPoint>) {
+        if (history.isEmpty()) return
+
+        val entries = history.mapIndexed { idx, pt ->
+            Entry(idx.toFloat(), pt.totalMW.toFloat())
+        }
+
+        val labels = history.map { pt ->
+            runCatching {
+                hourFmt.format(Instant.parse(pt.timeFrom))
+            }.getOrDefault("")
+        }
+
+        val dataSet = LineDataSet(entries, "Generation MW").apply {
+            color               = Color.parseColor("#00D4FF")
+            setDrawCircles(false)
+            lineWidth           = 2f
+            mode                = LineDataSet.Mode.CUBIC_BEZIER
+            setDrawFilled(true)
+            fillAlpha           = 40
+            fillColor           = Color.parseColor("#00D4FF")
+            setDrawValues(false)
+        }
+
+        binding.chart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                val i = value.toInt()
+                return if (i % 4 == 0 && i < labels.size) labels[i] else ""
+            }
+        }
+
+        binding.chart.data = LineData(dataSet)
+        binding.chart.invalidate()
+    }
+
+    // ── Notices list ─────────────────────────────
+
+    private fun renderNotices(notices: List<ActiveNotice>) {
+        binding.noticesContainer.removeAllViews()
+        if (notices.isEmpty()) {
+            binding.tvNoticesHeader.visibility = View.GONE
+            return
+        }
+        binding.tvNoticesHeader.visibility = View.VISIBLE
+        val inflater = LayoutInflater.from(requireContext())
+        for (notice in notices.distinctBy { it.documentId }) {
+            val row = inflater.inflate(R.layout.item_notice, binding.noticesContainer, false)
+            val tvTitle = row.findViewById<TextView>(R.id.tv_notice_title)
+            val tvDesc  = row.findViewById<TextView>(R.id.tv_notice_desc)
+            val tvPeriod = row.findViewById<TextView>(R.id.tv_notice_period)
+            val dot     = row.findViewById<View>(R.id.dot_severity)
+
+            tvTitle.text  = "${notice.unavailabilityType} — ${notice.reasonCode} (${notice.bmuId})"
+            tvDesc.text   = notice.reasonDescription
+            tvPeriod.text = "Until ${notice.timeTo.take(10)}"
+            dot.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (notice.unavailabilityType == "Unplanned") R.color.status_red
+                    else R.color.accent_amber
+                )
+            )
+            binding.noticesContainer.addView(row)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
