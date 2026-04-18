@@ -129,7 +129,9 @@ class SofiaWidgetProvider : AppWidgetProvider() {
 
             return bitmap
         }
-
+        fun forceRefresh(context: Context) {
+            scheduleWidgetWorker(context)
+        }
         private fun scheduleWidgetWorker(context: Context) {
             val req = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(30, TimeUnit.MINUTES)
                 .setConstraints(
