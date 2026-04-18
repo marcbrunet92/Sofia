@@ -1,4 +1,4 @@
-package com.lemarc.sofiaproduction
+package com.lemarc.sofiaproduction.data
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -21,23 +21,16 @@ import java.util.concurrent.TimeUnit
 
 interface EnergyApiService {
 
-    /** Returns a JsonObject keyed by BMU ID — we parse manually. */
     @GET("generation-history")
     suspend fun getGenerationHistory(
-        @Query("date")     date: String,
-        @Query("bmrsids")  bmu1: String,
-        @Query("bmrsids")  bmu2: String,
-        @Query("bmrsids")  bmu3: String,
-        @Query("bmrsids")  bmu4: String
+        @Query("date")    date: String,
+        @Query("bmrsids") bmuIds: List<String>
     ): Response<JsonObject>
 
     @GET("notifications")
     suspend fun getNotifications(
-        @Query("date")     date: String,
-        @Query("bmrsids")  bmu1: String,
-        @Query("bmrsids")  bmu2: String,
-        @Query("bmrsids")  bmu3: String,
-        @Query("bmrsids")  bmu4: String
+        @Query("date")    date: String,
+        @Query("bmrsids") bmuIds: List<String>
     ): Response<JsonObject>
 }
 
@@ -85,17 +78,14 @@ class SofiaRepository(
      */
     suspend fun fetchGeneration(dateIso: String = nowIso()): Result<List<GenerationPoint>> {
         return runCatching {
-            val resp = api.getGenerationHistory(
-                dateIso,
-                BMU_IDS[0], BMU_IDS[1], BMU_IDS[2], BMU_IDS[3]
-            )
+            val bmuIds = AppSettings.getBmuIds()
+            val resp = api.getGenerationHistory(dateIso, bmuIds)
             val body = resp.body() ?: error("Empty response (${resp.code()})")
 
-            // Aggregate per time-slot across all 4 BMUs
             val totals = mutableMapOf<String, Double>()
             val sources = mutableMapOf<String, String>()
 
-            for (bmuId in BMU_IDS) {
+            for (bmuId in bmuIds) {
                 val bmuObj = body.getAsJsonObject(bmuId) ?: continue
                 val genArray = bmuObj.getAsJsonArray("generation") ?: continue
                 val type = object : TypeToken<List<GenerationSlotRaw>>() {}.type
@@ -104,7 +94,6 @@ class SofiaRepository(
                 for (slot in slots) {
                     val t = slot.timeFrom
                     totals[t] = (totals[t] ?: 0.0) + (slot.levelTo ?: 0.0)
-                    // last-write wins — all BMUs share the same source flag per period
                     sources[t] = slot.source ?: "pn"
                 }
             }
@@ -119,16 +108,14 @@ class SofiaRepository(
 
     suspend fun fetchNotifications(dateIso: String = nowIso()): Result<List<ActiveNotice>> {
         return runCatching {
-            val resp = api.getNotifications(
-                dateIso,
-                BMU_IDS[0], BMU_IDS[1], BMU_IDS[2], BMU_IDS[3]
-            )
+            val bmuIds = AppSettings.getBmuIds()
+            val resp = api.getNotifications(dateIso, bmuIds)
             val body = resp.body() ?: error("Empty response (${resp.code()})")
 
             val notices = mutableListOf<ActiveNotice>()
             val noticeType = object : TypeToken<List<NotificationRaw>>() {}.type
 
-            for (bmuId in BMU_IDS) {
+            for (bmuId in bmuIds) {
                 val bmuObj = body.getAsJsonObject(bmuId) ?: continue
                 val arr = bmuObj.getAsJsonArray("notifications") ?: continue
                 val raw: List<NotificationRaw> = gson.fromJson(arr, noticeType)

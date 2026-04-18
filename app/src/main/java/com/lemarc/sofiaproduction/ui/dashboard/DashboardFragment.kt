@@ -1,4 +1,4 @@
-package com.lemarc.sofiaproduction
+package com.lemarc.sofiaproduction.ui.dashboard
 
 import android.graphics.Color
 import android.os.Bundle
@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -17,12 +18,16 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.lemarc.sofiaproduction.R
+import com.lemarc.sofiaproduction.data.ActiveNotice
+import com.lemarc.sofiaproduction.data.FarmSnapshot
+import com.lemarc.sofiaproduction.data.GenerationPoint
+import com.lemarc.sofiaproduction.data.INSTALLED_MW
 import com.lemarc.sofiaproduction.databinding.FragmentDashboardBinding
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import androidx.core.graphics.toColorInt
 
 class DashboardFragment : Fragment() {
 
@@ -228,10 +233,10 @@ class DashboardFragment : Fragment() {
         val inflater = LayoutInflater.from(requireContext())
         for (notice in notices.distinctBy { it.documentId }) {
             val row = inflater.inflate(R.layout.item_notice, binding.noticesContainer, false)
-            val tvTitle = row.findViewById<TextView>(R.id.tv_notice_title)
-            val tvDesc  = row.findViewById<TextView>(R.id.tv_notice_desc)
+            val tvTitle  = row.findViewById<TextView>(R.id.tv_notice_title)
+            val tvDesc   = row.findViewById<TextView>(R.id.tv_notice_desc)
             val tvPeriod = row.findViewById<TextView>(R.id.tv_notice_period)
-            val dot     = row.findViewById<View>(R.id.dot_severity)
+            val dot      = row.findViewById<View>(R.id.dot_severity)
 
             tvTitle.text  = "${notice.unavailabilityType} — ${notice.reasonCode} (${notice.bmuId})"
             tvDesc.text   = notice.reasonDescription

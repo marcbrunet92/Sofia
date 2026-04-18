@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SofiaProduction">
         <receiver
-            android:name=".SofiaWidgetProvider"
+            android:name=".widget.SofiaWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

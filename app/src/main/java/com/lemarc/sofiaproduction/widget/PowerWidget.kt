@@ -1,4 +1,4 @@
-package com.lemarc.sofiaproduction
+package com.lemarc.sofiaproduction.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -19,6 +19,9 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.lemarc.sofiaproduction.MainActivity
+import com.lemarc.sofiaproduction.R
+import com.lemarc.sofiaproduction.data.SofiaRepository
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
@@ -129,9 +132,11 @@ class SofiaWidgetProvider : AppWidgetProvider() {
 
             return bitmap
         }
+
         fun forceRefresh(context: Context) {
             scheduleWidgetWorker(context)
         }
+
         private fun scheduleWidgetWorker(context: Context) {
             val req = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(30, TimeUnit.MINUTES)
                 .setConstraints(
