@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import androidx.core.graphics.toColorInt
 
 class DashboardFragment : Fragment() {
 
@@ -164,14 +165,14 @@ class DashboardFragment : Fragment() {
             xAxis.apply {
                 position         = XAxis.XAxisPosition.BOTTOM
                 setDrawGridLines(false)
-                textColor        = Color.parseColor("#80FFFFFF")
+                textColor        = "#80FFFFFF".toColorInt()
                 textSize         = 9f
                 granularity      = 1f
             }
             axisLeft.apply {
                 setDrawGridLines(true)
-                gridColor        = Color.parseColor("#1AFFFFFF")
-                textColor        = Color.parseColor("#80FFFFFF")
+                gridColor        = "#1AFFFFFF".toColorInt()
+                textColor        = "#80FFFFFF".toColorInt()
                 textSize         = 9f
                 axisMinimum      = 0f
                 axisMaximum      = INSTALLED_MW.toFloat()
@@ -194,13 +195,13 @@ class DashboardFragment : Fragment() {
         }
 
         val dataSet = LineDataSet(entries, "Generation MW").apply {
-            color               = Color.parseColor("#00D4FF")
+            color               = "#00D4FF".toColorInt()
             setDrawCircles(false)
             lineWidth           = 2f
             mode                = LineDataSet.Mode.CUBIC_BEZIER
             setDrawFilled(true)
             fillAlpha           = 40
-            fillColor           = Color.parseColor("#00D4FF")
+            fillColor           = "#00D4FF".toColorInt()
             setDrawValues(false)
         }
 
