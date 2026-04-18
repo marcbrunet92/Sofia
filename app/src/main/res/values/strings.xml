@@ -3,4 +3,11 @@
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">This is an app widget description</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="widget_label">Sofia Wind Farm</string>
+    <string name="widget_description">Displays live generation output of Sofia Offshore Wind Farm</string>
+    <string name="mw_template">%1$d MW</string>
+    <string name="cf_template">%1$d%%</string>
+    <string name="updated_template">Updated %1$s</string>
+    <string name="error_template">Error: %1$s</string>
 </resources>
