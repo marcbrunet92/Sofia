@@ -29,15 +29,27 @@ import java.util.concurrent.TimeUnit
 class SofiaWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        for (id in appWidgetIds) {
-            updateWidget(context, appWidgetManager, id)
-        }
-        scheduleWidgetWorker(context)
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetIds: IntArray
+) {
+    for (id in appWidgetIds) {
+        updateWidget(context, appWidgetManager, id) // affiche "Updating…" temporairement
     }
+    scheduleWidgetWorker(context)
+    triggerImmediateRefresh(context) // ← ajouter ceci
+}
+private fun triggerImmediateRefresh(context: Context) {
+    val req = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+        .setConstraints(
+            Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+        )
+        .build()
+
+    WorkManager.getInstance(context).enqueue(req)
+}
 
     override fun onEnabled(context: Context) {
         scheduleWidgetWorker(context)
