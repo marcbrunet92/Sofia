@@ -1,4 +1,4 @@
-package com.lemarc.sofiaproduction
+package com.lemarc.sofiaproduction.data
 
 import com.google.gson.annotations.SerializedName
 
@@ -32,10 +32,10 @@ data class NotificationRaw(
 // Domain models (used by UI)
 // ─────────────────────────────────────────────
 
-/** Aggregated generation across all 4 BMUs for a single 30-min period. */
+/** Aggregated generation across all BMUs for a single 30-min period. */
 data class GenerationPoint(
     val timeFrom: String,   // ISO string, UTC
-    val totalMW: Double,    // sum of all 4 BMUs
+    val totalMW: Double,    // sum of all BMUs
     val source: String      // "b1610" or "pn"
 ) {
     val capacityFactor: Double get() = totalMW / INSTALLED_MW
@@ -71,4 +71,3 @@ data class FarmSnapshot(
 }
 
 const val INSTALLED_MW = 1_400.0
-val BMU_IDS = listOf("SOFWO-11", "SOFWO-12", "SOFWO-21", "SOFWO-22")

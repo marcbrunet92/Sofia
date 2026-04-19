@@ -10,4 +10,22 @@
     <string name="cf_template">%1$d%%</string>
     <string name="updated_template">Updated %1$s</string>
     <string name="error_template">Error: %1$s</string>
+
+    <!-- Toolbar -->
+    <string name="settings_title">Paramètres</string>
+
+    <!-- Settings screen -->
+    <string name="settings_bmu_section">Identifiants BMU</string>
+    <string name="settings_bmu_description">Saisissez les IDs BMU séparés par des virgules. Modifiez cette liste pour tester l\'application avec d\'autres identifiants.</string>
+    <string name="settings_bmu_hint">IDs BMU (séparés par des virgules)</string>
+    <string name="settings_btn_save">Enregistrer</string>
+    <string name="settings_btn_reset">Réinitialiser</string>
+    <string name="settings_saved">Paramètres enregistrés</string>
+    <string name="settings_reset">Valeurs d\'origine restaurées</string>
+    <string name="settings_bmu_empty_error">Veuillez saisir au moins un ID BMU</string>
+
+    <!-- Test mode -->
+    <string name="test_mode_banner">⚠ MODE TEST — IDs BMU personnalisés actifs</string>
+    <string name="settings_test_mode_title">⚠ Mode Test</string>
+    <string name="settings_test_mode_description">Lorsque les IDs BMU sont différents des valeurs d\'origine, un bandeau orange s\'affiche en haut de l\'application pour signaler que vous êtes en mode test. Utilisez le bouton Réinitialiser pour revenir aux IDs officiels de Sofia Offshore.</string>
 </resources>

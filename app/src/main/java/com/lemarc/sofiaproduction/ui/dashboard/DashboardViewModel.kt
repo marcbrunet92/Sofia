@@ -1,7 +1,9 @@
-package com.lemarc.sofiaproduction
+package com.lemarc.sofiaproduction.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemarc.sofiaproduction.data.FarmSnapshot
+import com.lemarc.sofiaproduction.data.SofiaRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
