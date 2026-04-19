@@ -18,11 +18,17 @@ object AppSettings {
 
     fun getBmuIds(): List<String> {
         val stored = prefs?.getString(KEY_BMU_IDS, null)
-        return if (!stored.isNullOrBlank()) {
-            stored.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-        } else {
-            DEFAULT_BMU_IDS
+        if (stored.isNullOrBlank()) {
+            return DEFAULT_BMU_IDS
         }
+
+        val parsedIds = stored.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        if (parsedIds.isEmpty()) {
+            prefs?.edit()?.remove(KEY_BMU_IDS)?.apply()
+            return DEFAULT_BMU_IDS
+        }
+
+        return parsedIds
     }
 
     fun setBmuIds(ids: List<String>) {
