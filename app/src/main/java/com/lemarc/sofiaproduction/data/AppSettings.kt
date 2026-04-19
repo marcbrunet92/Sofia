@@ -13,18 +13,21 @@ object AppSettings {
     private var prefs: SharedPreferences? = null
 
     fun init(context: Context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
+    private fun requirePrefs(): SharedPreferences =
+        prefs ?: error("AppSettings not initialized — call AppSettings.init(context) first")
+
     fun getBmuIds(): List<String> {
-        val stored = prefs?.getString(KEY_BMU_IDS, null)
+        val stored = requirePrefs().getString(KEY_BMU_IDS, null)
         if (stored.isNullOrBlank()) {
             return DEFAULT_BMU_IDS
         }
 
         val parsedIds = stored.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         if (parsedIds.isEmpty()) {
-            prefs?.edit()?.remove(KEY_BMU_IDS)?.apply()
+            requirePrefs().edit().remove(KEY_BMU_IDS).apply()
             return DEFAULT_BMU_IDS
         }
 
@@ -32,11 +35,11 @@ object AppSettings {
     }
 
     fun setBmuIds(ids: List<String>) {
-        prefs?.edit()?.putString(KEY_BMU_IDS, ids.joinToString(","))?.apply()
+        requirePrefs().edit().putString(KEY_BMU_IDS, ids.joinToString(",")).apply()
     }
 
     fun resetBmuIds() {
-        prefs?.edit()?.remove(KEY_BMU_IDS)?.apply()
+        requirePrefs().edit().remove(KEY_BMU_IDS).apply()
     }
 
     fun isTestMode(): Boolean = getBmuIds().toSet() != DEFAULT_BMU_IDS.toSet()
