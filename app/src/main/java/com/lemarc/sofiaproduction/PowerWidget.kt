@@ -1,6 +1,7 @@
 package com.lemarc.sofiaproduction
 
 import android.app.PendingIntent
+import androidx.work.OneTimeWorkRequestBuilder
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
@@ -37,18 +38,7 @@ class SofiaWidgetProvider : AppWidgetProvider() {
         updateWidget(context, appWidgetManager, id) // affiche "Updating…" temporairement
     }
     scheduleWidgetWorker(context)
-    triggerImmediateRefresh(context) // ← ajouter ceci
-}
-private fun triggerImmediateRefresh(context: Context) {
-    val req = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
-        .setConstraints(
-            Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-        )
-        .build()
-
-    WorkManager.getInstance(context).enqueue(req)
+    triggerImmediateRefresh(context)
 }
 
     override fun onEnabled(context: Context) {
@@ -64,7 +54,17 @@ private fun triggerImmediateRefresh(context: Context) {
 
         private const val RING_SIZE_PX = 240
         private const val TOTAL_MW = 1_400.0
+private fun triggerImmediateRefresh(context: Context) {
+    val req = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+        .setConstraints(
+            Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+        )
+        .build()
 
+    WorkManager.getInstance(context).enqueue(req)
+}
         fun updateWidget(
             context: Context,
             manager: AppWidgetManager,
