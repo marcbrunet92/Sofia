@@ -9,7 +9,6 @@ concurrency:
 
 env:
   JAVA_VERSION: 17
-  FLUTTER_VERSION: 3.41.1
   BUNDLETOOL_VERSION: 1.17.2
 
 jobs:
@@ -28,90 +27,79 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
 
-      # Flutter
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
-
-      - run: flutter doctor -v
-
-      # Cache pub dependencies
-      - name: Cache pub
+      # Cache Gradle dependencies
+      - name: Cache Gradle
         uses: actions/cache@v4
         with:
-          path: ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            pub-${{ runner.os }}-
-
-      - run: flutter pub get
+            gradle-${{ runner.os }}-
 
       # Decode keystore
       - name: Decode keystore
         run: |
-          mkdir -p android/app
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+          mkdir -p app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
 
       # Key properties
-      - name: Create key.properties
+      - name: Create keystore.properties
         run: |
-          cat > android/key.properties <<EOF
+          cat > keystore.properties <<EOF
           storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           storeFile=keystore.jks
           EOF
 
-      # Build AAB uniquement
+      # Build AAB
       - name: Build AAB
-        run: flutter build appbundle --release -v
+        run: ./gradlew bundleRelease
 
-      # Télécharger bundletool
+      # Download bundletool
       - name: Download bundletool
         run: |
           curl -L "https://github.com/google/bundletool/releases/download/${{ env.BUNDLETOOL_VERSION }}/bundletool-all-${{ env.BUNDLETOOL_VERSION }}.jar" \
             -o bundletool.jar
 
-      # Générer les APKs depuis le AAB via bundletool
+      # Generate APKs from AAB via bundletool
       - name: Generate APKs with bundletool
         run: |
           java -jar bundletool.jar build-apks \
-            --bundle=build/app/outputs/bundle/release/app-release.aab \
-            --output=build/app/outputs/apks/app.apks \
-            --ks=android/app/keystore.jks \
+            --bundle=app/build/outputs/bundle/release/app-release.aab \
+            --output=app/build/outputs/apks/app.apks \
+            --ks=app/keystore.jks \
             --ks-pass=pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
             --ks-key-alias=${{ secrets.ANDROID_KEY_ALIAS }} \
             --key-pass=pass:${{ secrets.ANDROID_KEY_PASSWORD }} \
             --mode=universal
-          
+
           java -jar bundletool.jar build-apks \
-            --bundle=build/app/outputs/bundle/release/app-release.aab \
-            --output=build/app/outputs/apks/default.apks \
-            --ks=android/app/keystore.jks \
+            --bundle=app/build/outputs/bundle/release/app-release.aab \
+            --output=app/build/outputs/apks/default.apks \
+            --ks=app/keystore.jks \
             --ks-pass=pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
             --ks-key-alias=${{ secrets.ANDROID_KEY_ALIAS }} \
             --key-pass=pass:${{ secrets.ANDROID_KEY_PASSWORD }} \
             --mode=default
 
-      # Extraire l'APK universel du .apks (archive zip)
+      # Extract APKs
       - name: Extract APKs
         run: |
-         mkdir -p build/app/outputs/universal-apk
-         mkdir -p build/app/outputs/split-apks
+          mkdir -p app/build/outputs/universal-apk
+          mkdir -p app/build/outputs/split-apks
 
-         # APK universel — was "universal.apks", should be "app.apks"
-         unzip -j build/app/outputs/apks/app.apks \
-         "universal.apk" \
-         -d build/app/outputs/universal-apk/
+          unzip -j app/build/outputs/apks/app.apks \
+            "universal.apk" \
+            -d app/build/outputs/universal-apk/
 
-          # APKs splittés — was "universal.apks", should be "default.apks"
-         unzip build/app/outputs/apks/default.apks \
-         "splits/*.apk" \
-         -d build/app/outputs/split-apks/
+          unzip app/build/outputs/apks/default.apks \
+            "splits/*.apk" \
+            -d app/build/outputs/split-apks/
 
-      # SSH + envoi des artifacts
+      # SSH + send artifacts
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -121,14 +109,14 @@ jobs:
 
       - name: Send artifacts to server
         run: |
-          ssh -p 18005 Marc@lemarc.fr "rm -rf /home/Marc/build/scrabble_solver_flutter/*"
-          ssh -p 18005 Marc@lemarc.fr "mkdir -p /home/Marc/build/scrabble_solver_flutter"
+          ssh -p 18005 Marc@lemarc.fr "rm -rf /home/Marc/build/sofia/*"
+          ssh -p 18005 Marc@lemarc.fr "mkdir -p /home/Marc/build/sofia"
 
-          scp -P 18005 build/app/outputs/bundle/release/app-release.aab \
-            Marc@lemarc.fr:/home/Marc/build/scrabble_solver_flutter/
+          scp -P 18005 app/build/outputs/bundle/release/app-release.aab \
+            Marc@lemarc.fr:/home/Marc/build/sofia/
 
-          scp -P 18005 build/app/outputs/universal-apk/universal.apk \
-            Marc@lemarc.fr:/home/Marc/build/scrabble_solver_flutter/
-          
-          scp -r -P 18005 build/app/outputs/split-apks/ \
-            Marc@lemarc.fr:/home/Marc/build/scrabble_solver_flutter/
+          scp -P 18005 app/build/outputs/universal-apk/universal.apk \
+            Marc@lemarc.fr:/home/Marc/build/sofia/
+
+          scp -r -P 18005 app/build/outputs/split-apks/ \
+            Marc@lemarc.fr:/home/Marc/build/sofia/
