@@ -26,6 +26,8 @@ import com.lemarc.sofiaproduction.R
 import com.lemarc.sofiaproduction.data.SofiaRepository
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.createBitmap
 
 private const val TAG = "SofiaWidget"
 
@@ -100,7 +102,6 @@ class SofiaWidgetProvider : AppWidgetProvider() {
             manager: AppWidgetManager,
             widgetId: Int,
             mw: Double? = null,
-            cf: Int? = null,
             status: String? = null,
             source: String? = null
         ) {
@@ -145,7 +146,7 @@ class SofiaWidgetProvider : AppWidgetProvider() {
 
         private fun createRingBitmap(percent: Int): Bitmap {
             val size = RING_SIZE_PX
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val bitmap = createBitmap(size, size)
             val canvas = Canvas(bitmap)
 
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -162,7 +163,7 @@ class SofiaWidgetProvider : AppWidgetProvider() {
             canvas.drawArc(oval, -90f, 360f, false, paint)
 
             if (percent > 0) {
-                paint.color = Color.parseColor("#00D4FF")
+                paint.color = "#00D4FF".toColorInt()
                 val sweep = 360f * percent / 100f
                 canvas.drawArc(oval, -90f, sweep, false, paint)
             }
@@ -239,7 +240,6 @@ class WidgetRefreshWorker(
                     manager  = manager,
                     widgetId = id,
                     mw       = snapshot.latestMW,
-                    cf       = (snapshot.capacityFactor * 100).toInt(),
                     status   = snapshot.statusLabel,
                     source   = snapshot.source
                 )
