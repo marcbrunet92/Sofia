@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
@@ -109,7 +110,7 @@ class SofiaRepository(
                         }
                     }
                     successCount++
-                } catch (ignored: Exception) {
+                } catch (_: Exception) {
                     // Skip this day but continue with others
                 }
             }

@@ -2,6 +2,7 @@ package com.lemarc.sofiaproduction.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 object AppSettings {
 
@@ -27,7 +28,7 @@ object AppSettings {
 
         val parsedIds = stored.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         if (parsedIds.isEmpty()) {
-            requirePrefs().edit().remove(KEY_BMU_IDS).apply()
+            requirePrefs().edit { remove(KEY_BMU_IDS) }
             return DEFAULT_BMU_IDS
         }
 
@@ -35,11 +36,11 @@ object AppSettings {
     }
 
     fun setBmuIds(ids: List<String>) {
-        requirePrefs().edit().putString(KEY_BMU_IDS, ids.joinToString(",")).apply()
+        requirePrefs().edit { putString(KEY_BMU_IDS, ids.joinToString(",")) }
     }
 
     fun resetBmuIds() {
-        requirePrefs().edit().remove(KEY_BMU_IDS).apply()
+        requirePrefs().edit { remove(KEY_BMU_IDS) }
     }
 
     fun isTestMode(): Boolean = getBmuIds().toSet() != DEFAULT_BMU_IDS.toSet()
@@ -49,7 +50,7 @@ object AppSettings {
     private const val KEY_SNAPSHOT_CACHE = "snapshot_cache"
 
     fun saveSnapshotJson(json: String) {
-        requirePrefs().edit().putString(KEY_SNAPSHOT_CACHE, json).apply()
+        requirePrefs().edit { putString(KEY_SNAPSHOT_CACHE, json) }
     }
 
     fun loadSnapshotJson(): String? {
@@ -58,6 +59,6 @@ object AppSettings {
     }
 
     fun clearSnapshotCache() {
-        requirePrefs().edit().remove(KEY_SNAPSHOT_CACHE).apply()
+        requirePrefs().edit { remove(KEY_SNAPSHOT_CACHE) }
     }
 }
