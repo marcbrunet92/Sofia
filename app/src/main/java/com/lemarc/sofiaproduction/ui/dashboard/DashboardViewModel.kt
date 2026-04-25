@@ -28,6 +28,10 @@ class DashboardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
+    /** Whether the chart is being reloaded due to a period change (rest of UI stays visible). */
+    private val _chartLoading = MutableStateFlow(false)
+    val chartLoading: StateFlow<Boolean> = _chartLoading.asStateFlow()
+
     /** Number of days to display in the chart (1–14). */
     private val _chartDays = MutableStateFlow(2)
     val chartDays: StateFlow<Int> = _chartDays.asStateFlow()
@@ -66,8 +70,9 @@ class DashboardViewModel(
         if (_chartDays.value != clamped) {
             _chartDays.value = clamped
             viewModelScope.launch {
-                _uiState.value = UiState.Loading
+                _chartLoading.value = true
                 load()
+                _chartLoading.value = false
             }
         }
     }

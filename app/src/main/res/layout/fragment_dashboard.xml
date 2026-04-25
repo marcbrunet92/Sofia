@@ -285,10 +285,24 @@
                             app:thumbColor="@color/accent_cyan"
                             app:labelBehavior="gone" />
 
-                        <com.github.mikephil.charting.charts.LineChart
-                            android:id="@+id/chart"
+                        <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="180dp" />
+                            android:layout_height="180dp">
+
+                            <com.github.mikephil.charting.charts.LineChart
+                                android:id="@+id/chart"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent" />
+
+                            <ProgressBar
+                                android:id="@+id/chart_loading"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:indeterminateTint="@color/accent_cyan"
+                                android:visibility="gone" />
+
+                        </FrameLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 

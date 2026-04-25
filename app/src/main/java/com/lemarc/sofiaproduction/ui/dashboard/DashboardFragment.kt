@@ -102,6 +102,14 @@ class DashboardFragment : Fragment() {
                 vm.refreshing.collect { binding.swipeRefresh.isRefreshing = it }
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.chartLoading.collect { loading ->
+                    binding.chartLoading.visibility = if (loading) View.VISIBLE else View.GONE
+                }
+            }
+        }
     }
 
     // ── State observation ────────────────────────
