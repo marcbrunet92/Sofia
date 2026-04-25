@@ -19,6 +19,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.lemarc.sofiaproduction.R
+import com.lemarc.sofiaproduction.data.ActiveNotice
 import com.lemarc.sofiaproduction.data.FarmSnapshot
 import com.lemarc.sofiaproduction.data.GenerationPoint
 import com.lemarc.sofiaproduction.data.INSTALLED_MW
@@ -227,8 +228,8 @@ class DashboardFragment : Fragment() {
             setScaleEnabled(false)
             setDrawGridBackground(false)
             setBackgroundColor(Color.TRANSPARENT)
-            setHighlightPerTapEnabled(true)
-            setHighlightPerDragEnabled(true)
+            isHighlightPerTapEnabled = true
+            isHighlightPerDragEnabled = true
             setDrawMarkers(true)
             marker = chartMarker
 
