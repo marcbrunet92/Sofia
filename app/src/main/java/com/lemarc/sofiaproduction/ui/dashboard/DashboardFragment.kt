@@ -260,7 +260,6 @@ class DashboardFragment : Fragment() {
             setDrawValues(false)
             isHighlightEnabled  = true
             highlightLineWidth  = 1f
-            highlightColor      = "#80FFFFFF".toColorInt()
             setDrawVerticalHighlightIndicator(true)
             setDrawHorizontalHighlightIndicator(false)
         }
