@@ -28,16 +28,17 @@ class DashboardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
-    /** Whether the chart is being reloaded due to a period change (rest of UI stays visible). */
-    private val _chartLoading = MutableStateFlow(false)
-    val chartLoading: StateFlow<Boolean> = _chartLoading.asStateFlow()
-
     /** Number of days to display in the chart (1–14). */
     private val _chartDays = MutableStateFlow(2)
     val chartDays: StateFlow<Int> = _chartDays.asStateFlow()
 
     // Refresh every 30 minutes automatically
     private val POLL_INTERVAL_MS = 30 * 60 * 1000L
+
+    companion object {
+        /** Always fetch the full window so slider changes need no extra API call. */
+        const val MAX_CHART_DAYS = 14
+    }
 
     init {
         // Restore last successful snapshot immediately so the loading screen
@@ -64,21 +65,17 @@ class DashboardViewModel(
         }
     }
 
-    /** Update the chart time window (clamped to 1–14 days). Triggers a reload. */
+    /** Update the chart time window (clamped to 1–14 days). No API call – the full history is
+     *  already loaded; the fragment slices it in-memory. */
     fun setChartDays(days: Int) {
-        val clamped = days.coerceIn(1, 14)
+        val clamped = days.coerceIn(1, MAX_CHART_DAYS)
         if (_chartDays.value != clamped) {
             _chartDays.value = clamped
-            viewModelScope.launch {
-                _chartLoading.value = true
-                load()
-                _chartLoading.value = false
-            }
         }
     }
 
     private suspend fun load() {
-        repo.fetchSnapshot(days = _chartDays.value)
+        repo.fetchSnapshot(days = MAX_CHART_DAYS)
             .onSuccess { snapshot ->
                 _uiState.value = UiState.Success(snapshot)
                 repo.cacheSnapshot(snapshot)

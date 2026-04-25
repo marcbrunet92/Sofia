@@ -18,7 +18,6 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.google.android.material.slider.Slider
 import com.lemarc.sofiaproduction.R
 import com.lemarc.sofiaproduction.data.FarmSnapshot
 import com.lemarc.sofiaproduction.data.GenerationPoint
@@ -41,6 +40,9 @@ class DashboardFragment : Fragment() {
 
     private lateinit var chartMarker: ChartMarkerView
 
+    /** Full MAX_CHART_DAYS history cached from the last successful API response. */
+    private var fullHistory: List<GenerationPoint> = emptyList()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -62,26 +64,22 @@ class DashboardFragment : Fragment() {
     private fun setupPeriodSlider() {
         binding.sliderChartDays.value = vm.chartDays.value.toFloat()
 
-        // Update the period label immediately for instant visual feedback while dragging.
+        // Immediately update chart days; no API call is needed because the full history
+        // is already loaded — the chart just slices it in-memory.
         binding.sliderChartDays.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) updatePeriodLabel(value.toInt())
+            if (fromUser) vm.setChartDays(value.toInt())
         }
 
-        // Only trigger a data fetch (and chart reload) once the user releases the slider.
-        binding.sliderChartDays.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) = Unit
-            override fun onStopTrackingTouch(slider: Slider) {
-                vm.setChartDays(slider.value.toInt())
-            }
-        })
-
-        // Observe chartDays in case it changes externally
+        // Observe chartDays: update the label and re-render the chart slice in-memory.
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.chartDays.collect { days ->
                     updatePeriodLabel(days)
                     if (binding.sliderChartDays.value != days.toFloat()) {
                         binding.sliderChartDays.value = days.toFloat()
+                    }
+                    if (fullHistory.isNotEmpty()) {
+                        renderChart(sliceHistory(fullHistory, days))
                     }
                 }
             }
@@ -105,14 +103,6 @@ class DashboardFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.refreshing.collect { binding.swipeRefresh.isRefreshing = it }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.chartLoading.collect { loading ->
-                    binding.chartLoading.visibility = if (loading) View.VISIBLE else View.GONE
-                }
             }
         }
     }
@@ -181,8 +171,9 @@ class DashboardFragment : Fragment() {
         // Status banner
         renderStatusBanner(snap)
 
-        // Chart
-        renderChart(snap.history)
+        // Chart – cache full history then render the current window slice
+        fullHistory = snap.history
+        renderChart(sliceHistory(snap.history, vm.chartDays.value))
 
         // Notifications list
         renderNotices(snap.activeNotices)
@@ -207,6 +198,23 @@ class DashboardFragment : Fragment() {
     }
 
     // ── Line chart ───────────────────────────────
+
+    /**
+     * Returns the subset of [history] whose timestamps fall within the last [days] days,
+     * measured back from the most recent point in the list.
+     */
+    private fun sliceHistory(history: List<GenerationPoint>, days: Int): List<GenerationPoint> {
+        if (history.isEmpty()) return history
+        val cutoff = runCatching {
+            Instant.parse(history.last().timeFrom.replace(' ', 'T'))
+                .minusSeconds(days * 24L * 3600)
+        }.getOrNull() ?: return history
+        return history.filter { pt ->
+            runCatching {
+                !Instant.parse(pt.timeFrom.replace(' ', 'T')).isBefore(cutoff)
+            }.getOrDefault(true)
+        }
+    }
 
     private fun setupChart() {
         chartMarker = ChartMarkerView(requireContext())
