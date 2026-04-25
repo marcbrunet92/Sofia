@@ -14,8 +14,7 @@
         android:background="@color/card_bg"
         app:title="@string/app_name"
         app:titleTextColor="@android:color/white"
-        app:navigationIconTint="@android:color/white"
-        app:menu="@menu/toolbar_menu" />
+        app:navigationIconTint="@android:color/white" />
 
     <!-- Test mode banner — visible only when custom BMU IDs are active -->
     <TextView
