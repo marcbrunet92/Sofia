@@ -159,10 +159,16 @@ class SofiaRepository(
         AppSettings.saveSnapshotJson(gson.toJson(snapshot))
     }
 
-    fun getCachedSnapshot(): FarmSnapshot? = runCatching {
+    fun getCachedSnapshot(): FarmSnapshot? {
         val json = AppSettings.loadSnapshotJson() ?: return null
-        gson.fromJson(json, FarmSnapshot::class.java)
-    }.getOrNull()
+        return runCatching {
+            gson.fromJson(json, FarmSnapshot::class.java)
+        }.getOrElse {
+            // Clear invalid/stale cache so future starts don't hit the same failure
+            AppSettings.saveSnapshotJson("")
+            null
+        }
+    }
 
     // ── Combined snapshot ────────────────────────
 

@@ -52,5 +52,8 @@ object AppSettings {
         requirePrefs().edit().putString(KEY_SNAPSHOT_CACHE, json).apply()
     }
 
-    fun loadSnapshotJson(): String? = requirePrefs().getString(KEY_SNAPSHOT_CACHE, null)
+    fun loadSnapshotJson(): String? {
+        val s = requirePrefs().getString(KEY_SNAPSHOT_CACHE, null)
+        return if (s.isNullOrBlank()) null else s
+    }
 }
