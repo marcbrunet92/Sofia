@@ -5,6 +5,8 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -108,7 +110,7 @@ class SofiaRepository(
                         }
                     }
                     successCount++
-                } catch (ignored: Exception) {
+                } catch (_: Exception) {
                     // Skip this day but continue with others
                 }
             }
@@ -150,6 +152,24 @@ class SofiaRepository(
                 }
             }
             notices
+        }
+    }
+
+    // ── Snapshot cache ───────────────────────────
+
+    suspend fun cacheSnapshot(snapshot: FarmSnapshot) {
+        val json = withContext(Dispatchers.IO) { gson.toJson(snapshot) }
+        AppSettings.saveSnapshotJson(json)
+    }
+
+    fun getCachedSnapshot(): FarmSnapshot? {
+        val json = AppSettings.loadSnapshotJson() ?: return null
+        return runCatching {
+            gson.fromJson(json, FarmSnapshot::class.java)
+        }.getOrElse {
+            // Clear invalid/stale cache so future starts don't hit the same failure
+            AppSettings.clearSnapshotCache()
+            null
         }
     }
 

@@ -35,7 +35,16 @@ class DashboardViewModel(
     // Refresh every 30 minutes automatically
     private val POLL_INTERVAL_MS = 30 * 60 * 1000L
 
+    companion object {
+        /** Always fetch the full window so slider changes need no extra API call. */
+        const val MAX_CHART_DAYS = 14
+    }
+
     init {
+        // Restore last successful snapshot immediately so the loading screen
+        // is never shown on repeat visits — the background refresh will update
+        // the data silently once the API responds.
+        repo.getCachedSnapshot()?.let { _uiState.value = UiState.Success(it) }
         startPolling()
     }
 
@@ -56,22 +65,20 @@ class DashboardViewModel(
         }
     }
 
-    /** Update the chart time window (clamped to 1–14 days). Triggers a reload. */
+    /** Update the chart time window (clamped to 1–14 days). No API call – the full history is
+     *  already loaded; the fragment slices it in-memory. */
     fun setChartDays(days: Int) {
-        val clamped = days.coerceIn(1, 14)
+        val clamped = days.coerceIn(1, MAX_CHART_DAYS)
         if (_chartDays.value != clamped) {
             _chartDays.value = clamped
-            viewModelScope.launch {
-                _uiState.value = UiState.Loading
-                load()
-            }
         }
     }
 
     private suspend fun load() {
-        repo.fetchSnapshot(days = _chartDays.value)
+        repo.fetchSnapshot(days = MAX_CHART_DAYS)
             .onSuccess { snapshot ->
                 _uiState.value = UiState.Success(snapshot)
+                repo.cacheSnapshot(snapshot)
             }
             .onFailure { e ->
                 // Keep last good data visible if we already had it
