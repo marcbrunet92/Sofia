@@ -84,7 +84,7 @@ class DashboardFragment : Fragment() {
     }
 
     private fun updatePeriodLabel(days: Int) {
-        binding.tvChartPeriodLabel.text = if (days <= 1) {
+        binding.tvChartPeriodLabel.text = if (days == 1) {
             getString(R.string.chart_period_one_day)
         } else {
             getString(R.string.chart_period_days, days)
