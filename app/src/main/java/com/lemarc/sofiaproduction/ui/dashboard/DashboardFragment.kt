@@ -18,8 +18,8 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.google.android.material.slider.Slider
 import com.lemarc.sofiaproduction.R
-import com.lemarc.sofiaproduction.data.ActiveNotice
 import com.lemarc.sofiaproduction.data.FarmSnapshot
 import com.lemarc.sofiaproduction.data.GenerationPoint
 import com.lemarc.sofiaproduction.data.INSTALLED_MW
@@ -62,13 +62,18 @@ class DashboardFragment : Fragment() {
     private fun setupPeriodSlider() {
         binding.sliderChartDays.value = vm.chartDays.value.toFloat()
 
+        // Update the period label immediately for instant visual feedback while dragging.
         binding.sliderChartDays.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val days = value.toInt()
-                updatePeriodLabel(days)
-                vm.setChartDays(days)
-            }
+            if (fromUser) updatePeriodLabel(value.toInt())
         }
+
+        // Only trigger a data fetch (and chart reload) once the user releases the slider.
+        binding.sliderChartDays.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) = Unit
+            override fun onStopTrackingTouch(slider: Slider) {
+                vm.setChartDays(slider.value.toInt())
+            }
+        })
 
         // Observe chartDays in case it changes externally
         viewLifecycleOwner.lifecycleScope.launch {
