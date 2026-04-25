@@ -1,6 +1,8 @@
 package com.lemarc.sofiaproduction
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.lemarc.sofiaproduction.data.AppSettings
@@ -31,17 +33,22 @@ class MainActivity : AppCompatActivity() {
             showDashboard()
         }
 
-        binding.toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_settings -> {
-                    showSettings()
-                    true
-                }
-                else -> false
-            }
-        }
-
         SofiaWidgetProvider.forceRefresh(this)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.toolbar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                showSettings()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onResume() {
