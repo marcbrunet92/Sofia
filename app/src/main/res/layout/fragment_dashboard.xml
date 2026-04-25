@@ -242,14 +242,48 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <!-- Period header row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="LAST 24 HOURS"
-                            android:textColor="#60FFFFFF"
-                            android:textSize="10sp"
-                            android:letterSpacing="0.15"
-                            android:layout_marginBottom="8dp" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="4dp">
+
+                            <TextView
+                                android:id="@+id/tv_chart_period_label"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/chart_period_one_day"
+                                android:textColor="#60FFFFFF"
+                                android:textSize="10sp"
+                                android:letterSpacing="0.15" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/chart_period_max_label"
+                                android:textColor="#40FFFFFF"
+                                android:textSize="9sp" />
+                        </LinearLayout>
+
+                        <!-- Period slider (1–14 days) -->
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/slider_chart_days"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="-4dp"
+                            android:layout_marginEnd="-4dp"
+                            android:layout_marginBottom="8dp"
+                            android:valueFrom="1"
+                            android:valueTo="14"
+                            android:value="2"
+                            android:stepSize="1"
+                            app:trackColorActive="@color/accent_cyan"
+                            app:trackColorInactive="#30FFFFFF"
+                            app:thumbColor="@color/accent_cyan"
+                            app:labelBehavior="gone" />
 
                         <com.github.mikephil.charting.charts.LineChart
                             android:id="@+id/chart"
