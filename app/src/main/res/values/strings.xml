@@ -28,4 +28,14 @@
     <string name="test_mode_banner">⚠ MODE TEST — IDs BMU personnalisés actifs</string>
     <string name="settings_test_mode_title">⚠ Mode Test</string>
     <string name="settings_test_mode_description">Lorsque les IDs BMU sont différents des valeurs d\'origine, un bandeau orange s\'affiche en haut de l\'application pour signaler que vous êtes en mode test. Utilisez le bouton Réinitialiser pour revenir aux IDs officiels de Sofia Offshore.</string>
+
+    <!-- Test BMU suggestion -->
+    <string name="settings_test_suggestion_label">ID suggéré pour le test :</string>
+    <string name="settings_test_suggestion_tap">Appuyer pour utiliser</string>
+
+    <!-- Chart period -->
+    <string name="chart_period_one_day">DERNIÈRES 24 HEURES</string>
+    <string name="chart_period_days">DERNIERS %1$d JOURS</string>
+    <string name="chart_period_max_label">14 jours max</string>
+    <string name="chart_fetch_error">Impossible de récupérer les données de génération</string>
 </resources>

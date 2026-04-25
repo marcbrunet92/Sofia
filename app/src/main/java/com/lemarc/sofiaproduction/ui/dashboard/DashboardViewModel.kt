@@ -28,6 +28,10 @@ class DashboardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
+    /** Number of days to display in the chart (1–14). */
+    private val _chartDays = MutableStateFlow(2)
+    val chartDays: StateFlow<Int> = _chartDays.asStateFlow()
+
     // Refresh every 30 minutes automatically
     private val POLL_INTERVAL_MS = 30 * 60 * 1000L
 
@@ -52,8 +56,20 @@ class DashboardViewModel(
         }
     }
 
+    /** Update the chart time window (clamped to 1–14 days). Triggers a reload. */
+    fun setChartDays(days: Int) {
+        val clamped = days.coerceIn(1, 14)
+        if (_chartDays.value != clamped) {
+            _chartDays.value = clamped
+            viewModelScope.launch {
+                _uiState.value = UiState.Loading
+                load()
+            }
+        }
+    }
+
     private suspend fun load() {
-        repo.fetchSnapshot()
+        repo.fetchSnapshot(days = _chartDays.value)
             .onSuccess { snapshot ->
                 _uiState.value = UiState.Success(snapshot)
             }

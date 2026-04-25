@@ -37,6 +37,9 @@ class DashboardFragment : Fragment() {
     private val vm: DashboardViewModel by viewModels()
 
     private val hourFmt = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneOffset.UTC)
+    private val dateFmt = DateTimeFormatter.ofPattern("dd/MM").withZone(ZoneOffset.UTC)
+
+    private lateinit var chartMarker: ChartMarkerView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,8 +52,43 @@ class DashboardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupChart()
+        setupPeriodSlider()
         setupSwipeRefresh()
         observeState()
+    }
+
+    // ── Period slider ────────────────────────────
+
+    private fun setupPeriodSlider() {
+        binding.sliderChartDays.value = vm.chartDays.value.toFloat()
+
+        binding.sliderChartDays.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                val days = value.toInt()
+                updatePeriodLabel(days)
+                vm.setChartDays(days)
+            }
+        }
+
+        // Observe chartDays in case it changes externally
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.chartDays.collect { days ->
+                    updatePeriodLabel(days)
+                    if (binding.sliderChartDays.value != days.toFloat()) {
+                        binding.sliderChartDays.value = days.toFloat()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updatePeriodLabel(days: Int) {
+        binding.tvChartPeriodLabel.text = if (days == 1) {
+            getString(R.string.chart_period_one_day)
+        } else {
+            getString(R.string.chart_period_days, days)
+        }
     }
 
     // ── SwipeRefreshLayout ───────────────────────
@@ -122,7 +160,7 @@ class DashboardFragment : Fragment() {
 
         // Last updated
         val updatedLabel = runCatching {
-            val inst = Instant.parse(snap.lastUpdated)
+            val inst = Instant.parse(snap.lastUpdated.replace(' ', 'T'))
             hourFmt.format(inst) + " UTC"
         }.getOrDefault("—")
         binding.tvLastUpdated.text = getString(R.string.updated_template, updatedLabel)
@@ -130,7 +168,7 @@ class DashboardFragment : Fragment() {
         // Status banner
         renderStatusBanner(snap)
 
-        // 24h chart
+        // Chart
         renderChart(snap.history)
 
         // Notifications list
@@ -155,9 +193,11 @@ class DashboardFragment : Fragment() {
         binding.tvStatus.setTextColor(bannerColor)
     }
 
-    // ── 24h Line chart ───────────────────────────
+    // ── Line chart ───────────────────────────────
 
     private fun setupChart() {
+        chartMarker = ChartMarkerView(requireContext())
+
         binding.chart.apply {
             description.isEnabled = false
             legend.isEnabled      = false
@@ -166,6 +206,10 @@ class DashboardFragment : Fragment() {
             setScaleEnabled(false)
             setDrawGridBackground(false)
             setBackgroundColor(Color.TRANSPARENT)
+            setHighlightPerTapEnabled(true)
+            setHighlightPerDragEnabled(true)
+            setDrawMarkers(true)
+            marker = chartMarker
 
             xAxis.apply {
                 position         = XAxis.XAxisPosition.BOTTOM
@@ -189,13 +233,19 @@ class DashboardFragment : Fragment() {
     private fun renderChart(history: List<GenerationPoint>) {
         if (history.isEmpty()) return
 
+        // Update marker data source
+        chartMarker.updateHistory(history)
+
         val entries = history.mapIndexed { idx, pt ->
             Entry(idx.toFloat(), pt.totalMW.toFloat())
         }
 
+        // X-axis labels: show time for 1-day view, date+time for multi-day
+        val isMultiDay = vm.chartDays.value > 1
         val labels = history.map { pt ->
             runCatching {
-                hourFmt.format(Instant.parse(pt.timeFrom))
+                val inst = Instant.parse(pt.timeFrom.replace(' ', 'T'))
+                if (isMultiDay) dateFmt.format(inst) else hourFmt.format(inst)
             }.getOrDefault("")
         }
 
@@ -208,12 +258,19 @@ class DashboardFragment : Fragment() {
             fillAlpha           = 40
             fillColor           = "#00D4FF".toColorInt()
             setDrawValues(false)
+            isHighlightEnabled  = true
+            highlightLineWidth  = 1f
+            highlightColor      = "#80FFFFFF".toColorInt()
+            setDrawVerticalHighlightIndicator(true)
+            setDrawHorizontalHighlightIndicator(false)
         }
 
+        // Show one label every 4 points (≈ 2h for 30-min intervals)
+        val labelStep = if (isMultiDay) 8 else 4
         binding.chart.xAxis.valueFormatter = object : ValueFormatter() {
             override fun getFormattedValue(value: Float): String {
                 val i = value.toInt()
-                return if (i % 4 == 0 && i < labels.size) labels[i] else ""
+                return if (i % labelStep == 0 && i < labels.size) labels[i] else ""
             }
         }
 
@@ -257,3 +314,4 @@ class DashboardFragment : Fragment() {
         _binding = null
     }
 }
+

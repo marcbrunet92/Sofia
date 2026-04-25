@@ -50,6 +50,10 @@ class SettingsFragment : Fragment() {
             ).show()
         }
 
+        binding.chipTestBmu.setOnClickListener {
+            binding.etBmuIds.setText("HEYM11")
+        }
+
         binding.btnReset.setOnClickListener {
             AppSettings.resetBmuIds()
             binding.etBmuIds.setText(AppSettings.DEFAULT_BMU_IDS.joinToString(", "))

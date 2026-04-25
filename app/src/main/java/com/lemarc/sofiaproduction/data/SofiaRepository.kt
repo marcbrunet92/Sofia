@@ -73,33 +73,50 @@ class SofiaRepository(
     // ── Generation ──────────────────────────────
 
     /**
-     * Fetches one day of generation data (48 half-hour periods).
+     * Fetches [days] days of generation data (48 half-hour periods per day).
      * [dateIso] = ISO 8601 UTC timestamp used as the "end" reference.
+     * Partial results are returned if some days fail. Throws only when all days fail.
      */
-    suspend fun fetchGeneration(dateIso: String = nowIso()): Result<List<GenerationPoint>> {
+    suspend fun fetchGeneration(dateIso: String = nowIso(), days: Int = 2): Result<List<GenerationPoint>> {
         return runCatching {
+            val endInstant = Instant.parse(dateIso.replace(' ', 'T'))
             val bmuIds = AppSettings.getBmuIds()
-            val resp = api.getGenerationHistory(dateIso, bmuIds)
-            val body = resp.body() ?: error("Empty response (${resp.code()})")
+            val allPoints = mutableMapOf<String, Pair<Double, String>>()
+            var successCount = 0
 
-            val totals = mutableMapOf<String, Double>()
-            val sources = mutableMapOf<String, String>()
+            for (dayOffset in 0 until days) {
+                val dayInstant = endInstant.minusSeconds(dayOffset * 24L * 3600)
+                val dayIso = iso.format(dayInstant)
 
-            for (bmuId in bmuIds) {
-                val bmuObj = body.getAsJsonObject(bmuId) ?: continue
-                val genArray = bmuObj.getAsJsonArray("generation") ?: continue
-                val type = object : TypeToken<List<GenerationSlotRaw>>() {}.type
-                val slots: List<GenerationSlotRaw> = gson.fromJson(genArray, type)
+                try {
+                    val resp = api.getGenerationHistory(dayIso, bmuIds)
+                    val body = resp.body() ?: continue
 
-                for (slot in slots) {
-                    val t = slot.timeFrom
-                    totals[t] = (totals[t] ?: 0.0) + (slot.levelTo ?: 0.0)
-                    sources[t] = slot.source ?: "pn"
+                    for (bmuId in bmuIds) {
+                        val bmuObj = body.getAsJsonObject(bmuId) ?: continue
+                        val genArray = bmuObj.getAsJsonArray("generation") ?: continue
+                        val type = object : TypeToken<List<GenerationSlotRaw>>() {}.type
+                        val slots: List<GenerationSlotRaw> = gson.fromJson(genArray, type)
+
+                        for (slot in slots) {
+                            val t = slot.timeFrom
+                            val current = allPoints[t]
+                            allPoints[t] = Pair(
+                                (current?.first ?: 0.0) + (slot.levelTo ?: 0.0),
+                                slot.source ?: current?.second ?: "pn"
+                            )
+                        }
+                    }
+                    successCount++
+                } catch (ignored: Exception) {
+                    // Skip this day but continue with others
                 }
             }
 
-            totals.entries
-                .map { (t, mw) -> GenerationPoint(t, mw, sources[t] ?: "pn") }
+            if (successCount == 0) error("Impossible de récupérer les données de génération")
+
+            allPoints.entries
+                .map { (t, pair) -> GenerationPoint(t, pair.first, pair.second) }
                 .sortedBy { it.timeFrom }
         }
     }
@@ -138,9 +155,9 @@ class SofiaRepository(
 
     // ── Combined snapshot ────────────────────────
 
-    suspend fun fetchSnapshot(): Result<FarmSnapshot> {
+    suspend fun fetchSnapshot(days: Int = 2): Result<FarmSnapshot> {
         return runCatching {
-            val genResult = fetchGeneration().getOrThrow()
+            val genResult = fetchGeneration(days = days).getOrThrow()
             val noticesResult = fetchNotifications().getOrDefault(emptyList())
 
             val latest = genResult.lastOrNull()
