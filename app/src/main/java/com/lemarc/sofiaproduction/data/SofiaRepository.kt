@@ -5,7 +5,8 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Response
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
@@ -155,8 +156,9 @@ class SofiaRepository(
 
     // ── Snapshot cache ───────────────────────────
 
-    fun cacheSnapshot(snapshot: FarmSnapshot) {
-        AppSettings.saveSnapshotJson(gson.toJson(snapshot))
+    suspend fun cacheSnapshot(snapshot: FarmSnapshot) {
+        val json = withContext(Dispatchers.IO) { gson.toJson(snapshot) }
+        AppSettings.saveSnapshotJson(json)
     }
 
     fun getCachedSnapshot(): FarmSnapshot? {
@@ -165,7 +167,7 @@ class SofiaRepository(
             gson.fromJson(json, FarmSnapshot::class.java)
         }.getOrElse {
             // Clear invalid/stale cache so future starts don't hit the same failure
-            AppSettings.saveSnapshotJson("")
+            AppSettings.clearSnapshotCache()
             null
         }
     }

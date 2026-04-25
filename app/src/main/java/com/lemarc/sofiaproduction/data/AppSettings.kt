@@ -56,4 +56,8 @@ object AppSettings {
         val s = requirePrefs().getString(KEY_SNAPSHOT_CACHE, null)
         return if (s.isNullOrBlank()) null else s
     }
+
+    fun clearSnapshotCache() {
+        requirePrefs().edit().remove(KEY_SNAPSHOT_CACHE).apply()
+    }
 }
