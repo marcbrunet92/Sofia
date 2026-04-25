@@ -36,6 +36,10 @@ class DashboardViewModel(
     private val POLL_INTERVAL_MS = 30 * 60 * 1000L
 
     init {
+        // Restore last successful snapshot immediately so the loading screen
+        // is never shown on repeat visits — the background refresh will update
+        // the data silently once the API responds.
+        repo.getCachedSnapshot()?.let { _uiState.value = UiState.Success(it) }
         startPolling()
     }
 
@@ -72,6 +76,7 @@ class DashboardViewModel(
         repo.fetchSnapshot(days = _chartDays.value)
             .onSuccess { snapshot ->
                 _uiState.value = UiState.Success(snapshot)
+                repo.cacheSnapshot(snapshot)
             }
             .onFailure { e ->
                 // Keep last good data visible if we already had it

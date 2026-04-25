@@ -43,4 +43,14 @@ object AppSettings {
     }
 
     fun isTestMode(): Boolean = getBmuIds().toSet() != DEFAULT_BMU_IDS.toSet()
+
+    // ── Snapshot cache ───────────────────────────
+
+    private const val KEY_SNAPSHOT_CACHE = "snapshot_cache"
+
+    fun saveSnapshotJson(json: String) {
+        requirePrefs().edit().putString(KEY_SNAPSHOT_CACHE, json).apply()
+    }
+
+    fun loadSnapshotJson(): String? = requirePrefs().getString(KEY_SNAPSHOT_CACHE, null)
 }
