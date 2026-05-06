@@ -45,6 +45,20 @@ object AppSettings {
 
     fun isTestMode(): Boolean = getBmuIds().toSet() != DEFAULT_BMU_IDS.toSet()
 
+    // ── API mode ─────────────────────────────────
+
+    const val API_MODE_LEGACY = "legacy"
+    const val API_MODE_SOFIA  = "sofia"
+
+    private const val KEY_API_MODE = "api_mode"
+
+    fun getApiMode(): String =
+        requirePrefs().getString(KEY_API_MODE, API_MODE_LEGACY) ?: API_MODE_LEGACY
+
+    fun setApiMode(mode: String) {
+        requirePrefs().edit { putString(KEY_API_MODE, mode) }
+    }
+
     // ── Snapshot cache ───────────────────────────
 
     private const val KEY_SNAPSHOT_CACHE = "snapshot_cache"

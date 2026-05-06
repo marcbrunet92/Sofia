@@ -1,0 +1,16 @@
+[Unit]
+Description=Sofia Wind Farm API Server
+After=network.target
+
+[Service]
+Type=simple
+User=Marc
+WorkingDirectory=/home/Marc/Web/Sofia/server
+ExecStart=/home/Marc/Web/Sofia/server/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

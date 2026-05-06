@@ -71,3 +71,32 @@ data class FarmSnapshot(
 }
 
 const val INSTALLED_MW = 1_400.0
+
+// ─────────────────────────────────────────────
+// Sofia API response models (sofia.lemarc.fr)
+// ─────────────────────────────────────────────
+
+/** Aggregated generation point returned by the Sofia server's /generation endpoint. */
+data class SofiaGenerationPoint(
+    @SerializedName("time_from") val timeFrom: String,
+    @SerializedName("time_to")   val timeTo: String,
+    @SerializedName("total_mw")  val totalMW: Double,
+    @SerializedName("source")    val source: String
+)
+
+/** Peak generation records from the Sofia server's /records endpoint. */
+data class RecordsData(
+    @SerializedName("all_time_max_mw")   val allTimeMaxMw: Double,
+    @SerializedName("all_time_max_date") val allTimeMaxDate: String?,
+    @SerializedName("days_90_max_mw")    val days90MaxMw: Double,
+    @SerializedName("days_90_max_date")  val days90MaxDate: String?,
+    @SerializedName("days_7_max_mw")     val days7MaxMw: Double,
+    @SerializedName("days_7_max_date")   val days7MaxDate: String?
+)
+
+/** Date-range information from the Sofia server's /latest-date endpoint. */
+data class DataRangeInfo(
+    @SerializedName("latest_date") val latestDate: String?,
+    @SerializedName("oldest_date") val oldestDate: String?,
+    @SerializedName("total_days")  val totalDays: Int
+)

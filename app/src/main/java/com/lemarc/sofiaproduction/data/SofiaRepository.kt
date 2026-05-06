@@ -65,6 +65,7 @@ object ApiClient {
 
 class SofiaRepository(
     private val api: EnergyApiService = ApiClient.service,
+    private val sofiaApi: SofiaApiService = SofiaApiClient.service,
     private val gson: Gson = Gson()
 ) {
     private val iso = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -191,5 +192,50 @@ class SofiaRepository(
                 activeNotices = noticesResult
             )
         }
+    }
+
+    // ── Sofia API methods ────────────────────────
+
+    /** Fetch the available data date range from the Sofia server. */
+    suspend fun fetchDataRange(): Result<DataRangeInfo> = runCatching {
+        val resp = sofiaApi.getLatestDate()
+        resp.body() ?: error("Empty response (${resp.code()})")
+    }
+
+    /** Fetch peak generation records from the Sofia server. */
+    suspend fun fetchRecords(): Result<RecordsData> = runCatching {
+        val bmuIds = AppSettings.getBmuIds()
+        val resp = sofiaApi.getRecords(bmuIds)
+        resp.body() ?: error("Empty response (${resp.code()})")
+    }
+
+    /**
+     * Fetch a generation snapshot from the Sofia server for [days] days ending now.
+     * Notifications are still fetched from the legacy API.
+     */
+    suspend fun fetchSnapshotFromSofiaApi(days: Int): Result<FarmSnapshot> = runCatching {
+        val now = Instant.now()
+        val fromDate = iso.format(now.minusSeconds(days * 24L * 3600))
+        val toDate = iso.format(now)
+        val bmuIds = AppSettings.getBmuIds()
+
+        val resp = sofiaApi.getGeneration(fromDate, toDate, bmuIds)
+        val sofiaPoints = resp.body() ?: error("Empty generation response (${resp.code()})")
+
+        val genPoints = sofiaPoints.map { sp ->
+            GenerationPoint(sp.timeFrom, sp.totalMW, sp.source)
+        }
+
+        val noticesResult = fetchNotifications().getOrDefault(emptyList())
+        val latest = genPoints.lastOrNull()
+
+        FarmSnapshot(
+            latestMW = latest?.totalMW ?: 0.0,
+            capacityFactor = latest?.capacityFactor ?: 0.0,
+            source = latest?.source ?: "pn",
+            lastUpdated = latest?.timeFrom ?: "",
+            history = genPoints,
+            activeNotices = noticesResult
+        )
     }
 }

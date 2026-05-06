@@ -37,5 +37,20 @@
     <string name="chart_period_one_day">DERNIÈRES 24 HEURES</string>
     <string name="chart_period_days">DERNIERS %1$d JOURS</string>
     <string name="chart_period_max_label">14 jours max</string>
+    <string name="chart_period_max_days">%1$d jours max</string>
     <string name="chart_fetch_error">Impossible de récupérer les données de génération</string>
+
+    <!-- API source selection (Settings screen) -->
+    <string name="settings_api_section">Source de données</string>
+    <string name="settings_api_legacy_label">API Robinhawkes (energy-api.robinhawkes.com)</string>
+    <string name="settings_api_legacy_desc">14 jours d\'historique de production</string>
+    <string name="settings_api_sofia_label">API Sofia (sofia.lemarc.fr)</string>
+    <string name="settings_api_sofia_desc">%1$d jours d\'historique de production</string>
+    <string name="settings_api_sofia_desc_loading">Chargement de l\'historique disponible…</string>
+
+    <!-- Records card (Dashboard — Sofia API only) -->
+    <string name="records_title">RECORDS DE PRODUCTION</string>
+    <string name="records_all_time">Depuis toujours</string>
+    <string name="records_90_days">90 derniers jours</string>
+    <string name="records_7_days">7 derniers jours</string>
 </resources>
