@@ -261,6 +261,7 @@
                                 android:letterSpacing="0.15" />
 
                             <TextView
+                                android:id="@+id/tv_chart_max_label"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/chart_period_max_label"
@@ -303,6 +304,157 @@
                                 android:visibility="gone" />
 
                         </FrameLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- ── Records card (Sofia API only) ── -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card_records"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/card_bg"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/records_title"
+                            android:textColor="#60FFFFFF"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.15"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- All time row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="10dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/records_all_time"
+                                android:textColor="#80FFFFFF"
+                                android:textSize="13sp" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:gravity="end">
+
+                                <TextView
+                                    android:id="@+id/tv_records_all_time_mw"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="@color/accent_cyan"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:text="—" />
+
+                                <TextView
+                                    android:id="@+id/tv_records_all_time_date"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="#50FFFFFF"
+                                    android:textSize="11sp"
+                                    android:text="—" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- 90-day row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="10dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/records_90_days"
+                                android:textColor="#80FFFFFF"
+                                android:textSize="13sp" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:gravity="end">
+
+                                <TextView
+                                    android:id="@+id/tv_records_90d_mw"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="@color/accent_cyan"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:text="—" />
+
+                                <TextView
+                                    android:id="@+id/tv_records_90d_date"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="#50FFFFFF"
+                                    android:textSize="11sp"
+                                    android:text="—" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- 7-day row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/records_7_days"
+                                android:textColor="#80FFFFFF"
+                                android:textSize="13sp" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:gravity="end">
+
+                                <TextView
+                                    android:id="@+id/tv_records_7d_mw"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="@color/accent_cyan"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:text="—" />
+
+                                <TextView
+                                    android:id="@+id/tv_records_7d_date"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="#50FFFFFF"
+                                    android:textSize="11sp"
+                                    android:text="—" />
+                            </LinearLayout>
+                        </LinearLayout>
+
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 

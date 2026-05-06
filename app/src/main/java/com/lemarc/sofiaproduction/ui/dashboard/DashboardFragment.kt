@@ -23,6 +23,7 @@ import com.lemarc.sofiaproduction.data.ActiveNotice
 import com.lemarc.sofiaproduction.data.FarmSnapshot
 import com.lemarc.sofiaproduction.data.GenerationPoint
 import com.lemarc.sofiaproduction.data.INSTALLED_MW
+import com.lemarc.sofiaproduction.data.RecordsData
 import com.lemarc.sofiaproduction.databinding.FragmentDashboardBinding
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -59,6 +60,12 @@ class DashboardFragment : Fragment() {
         setupPeriodSlider()
         setupSwipeRefresh()
         observeState()
+        observeRecords()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        vm.onResume()
     }
 
     // ── Period slider ────────────────────────────
@@ -70,6 +77,20 @@ class DashboardFragment : Fragment() {
         // is already loaded — the chart just slices it in-memory.
         binding.sliderChartDays.addOnChangeListener { _, value, fromUser ->
             if (fromUser) vm.setChartDays(value.toInt())
+        }
+
+        // Observe maxChartDays: update the slider's upper bound and max label.
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.maxChartDays.collect { maxDays ->
+                    // Adjust slider maximum before checking the current value
+                    binding.sliderChartDays.valueTo = maxDays.toFloat()
+                    if (binding.sliderChartDays.value > maxDays) {
+                        binding.sliderChartDays.value = maxDays.toFloat()
+                    }
+                    binding.tvChartMaxLabel.text = getString(R.string.chart_period_max_days, maxDays)
+                }
+            }
         }
 
         // Observe chartDays: update the label and re-render the chart slice in-memory.
@@ -298,6 +319,40 @@ class DashboardFragment : Fragment() {
 
         binding.chart.data = LineData(dataSet)
         binding.chart.invalidate()
+    }
+
+    // ── Records card ─────────────────────────────
+
+    private fun observeRecords() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.records.collect { records ->
+                    if (records != null) {
+                        binding.cardRecords.visibility = View.VISIBLE
+                        renderRecords(records)
+                    } else {
+                        binding.cardRecords.visibility = View.GONE
+                    }
+                }
+            }
+        }
+    }
+
+    private fun renderRecords(records: RecordsData) {
+        binding.tvRecordsAllTimeMw.text   = getString(R.string.mw_template, records.allTimeMaxMw.toInt())
+        binding.tvRecordsAllTimeDate.text = formatRecordDate(records.allTimeMaxDate)
+        binding.tvRecords90dMw.text       = getString(R.string.mw_template, records.days90MaxMw.toInt())
+        binding.tvRecords90dDate.text     = formatRecordDate(records.days90MaxDate)
+        binding.tvRecords7dMw.text        = getString(R.string.mw_template, records.days7MaxMw.toInt())
+        binding.tvRecords7dDate.text      = formatRecordDate(records.days7MaxDate)
+    }
+
+    private fun formatRecordDate(isoDate: String?): String {
+        if (isoDate == null) return "—"
+        return runCatching {
+            val inst = Instant.parse(isoDate.replace(' ', 'T'))
+            dateFmt.format(inst)
+        }.getOrDefault("—")
     }
 
     // ── Notices list ─────────────────────────────

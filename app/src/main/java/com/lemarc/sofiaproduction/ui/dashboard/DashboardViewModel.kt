@@ -2,7 +2,9 @@ package com.lemarc.sofiaproduction.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemarc.sofiaproduction.data.AppSettings
 import com.lemarc.sofiaproduction.data.FarmSnapshot
+import com.lemarc.sofiaproduction.data.RecordsData
 import com.lemarc.sofiaproduction.data.SofiaRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,16 +30,34 @@ class DashboardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
-    /** Number of days to display in the chart (1–14). */
+    /** Number of days to display in the chart (1–maxChartDays). */
     private val _chartDays = MutableStateFlow(2)
     val chartDays: StateFlow<Int> = _chartDays.asStateFlow()
+
+    /**
+     * Maximum selectable chart days.
+     * Legacy API: always 14.
+     * Sofia API: set from the /latest-date endpoint (capped at MAX_CHART_DAYS_SOFIA).
+     */
+    private val _maxChartDays = MutableStateFlow(MAX_CHART_DAYS_LEGACY)
+    val maxChartDays: StateFlow<Int> = _maxChartDays.asStateFlow()
+
+    /** Peak generation records — non-null only when the Sofia API is active. */
+    private val _records = MutableStateFlow<RecordsData?>(null)
+    val records: StateFlow<RecordsData?> = _records.asStateFlow()
 
     // Refresh every 30 minutes automatically
     private val POLL_INTERVAL_MS = 30 * 60 * 1000L
 
+    /** Tracks the API mode at last load so we can detect settings changes. */
+    private var lastApiMode: String = AppSettings.getApiMode()
+
     companion object {
-        /** Always fetch the full window so slider changes need no extra API call. */
-        const val MAX_CHART_DAYS = 14
+        /** Days fetched from the legacy (Robinhawkes) API. */
+        const val MAX_CHART_DAYS_LEGACY = 14
+
+        /** Maximum days to request from the Sofia API (caps the slider). */
+        const val MAX_CHART_DAYS_SOFIA = 90
     }
 
     init {
@@ -65,17 +85,41 @@ class DashboardViewModel(
         }
     }
 
-    /** Update the chart time window (clamped to 1–14 days). No API call – the full history is
-     *  already loaded; the fragment slices it in-memory. */
+    /**
+     * Called from DashboardFragment.onResume() to detect API mode changes made
+     * in the Settings screen and trigger a reload when needed.
+     */
+    fun onResume() {
+        val currentMode = AppSettings.getApiMode()
+        if (currentMode != lastApiMode) {
+            lastApiMode = currentMode
+            if (currentMode == AppSettings.API_MODE_LEGACY) {
+                _maxChartDays.value = MAX_CHART_DAYS_LEGACY
+                _records.value = null
+            }
+            viewModelScope.launch { load() }
+        }
+    }
+
+    /** Update the chart time window (clamped to [1, maxChartDays]). No API call needed —
+     *  the full history is already loaded; the fragment slices it in-memory. */
     fun setChartDays(days: Int) {
-        val clamped = days.coerceIn(1, MAX_CHART_DAYS)
+        val clamped = days.coerceIn(1, _maxChartDays.value)
         if (_chartDays.value != clamped) {
             _chartDays.value = clamped
         }
     }
 
     private suspend fun load() {
-        repo.fetchSnapshot(days = MAX_CHART_DAYS)
+        val isNewApi = AppSettings.getApiMode() == AppSettings.API_MODE_SOFIA
+
+        val snapshotResult = if (isNewApi) {
+            repo.fetchSnapshotFromSofiaApi(days = MAX_CHART_DAYS_SOFIA)
+        } else {
+            repo.fetchSnapshot(days = MAX_CHART_DAYS_LEGACY)
+        }
+
+        snapshotResult
             .onSuccess { snapshot ->
                 _uiState.value = UiState.Success(snapshot)
                 repo.cacheSnapshot(snapshot)
@@ -86,5 +130,15 @@ class DashboardViewModel(
                     _uiState.value = UiState.Error(e.message ?: "Unknown error")
                 }
             }
+
+        if (isNewApi) {
+            repo.fetchDataRange().onSuccess { info ->
+                _maxChartDays.value = info.totalDays.coerceIn(1, MAX_CHART_DAYS_SOFIA)
+            }
+            repo.fetchRecords().onSuccess { data ->
+                _records.value = data
+            }
+        }
     }
 }
+

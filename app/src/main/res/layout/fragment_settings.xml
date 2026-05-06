@@ -110,6 +110,72 @@
             android:background="#20FFFFFF"
             android:layout_marginBottom="24dp" />
 
+        <!-- ── API source section ── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_api_section"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_api_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+
+            <RadioButton
+                android:id="@+id/rb_api_legacy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_api_legacy_label"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:buttonTint="@color/accent_cyan"
+                android:paddingStart="8dp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_api_legacy_desc"
+                android:textColor="#60FFFFFF"
+                android:textSize="12sp"
+                android:paddingStart="40dp"
+                android:layout_marginBottom="12dp" />
+
+            <RadioButton
+                android:id="@+id/rb_api_sofia"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_api_sofia_label"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:buttonTint="@color/accent_cyan"
+                android:paddingStart="8dp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_sofia_api_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_api_sofia_desc_loading"
+                android:textColor="#60FFFFFF"
+                android:textSize="12sp"
+                android:paddingStart="40dp" />
+
+        </RadioGroup>
+
+        <!-- ── Divider ── -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#20FFFFFF"
+            android:layout_marginBottom="24dp" />
+
         <!-- ── Test mode info ── -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
