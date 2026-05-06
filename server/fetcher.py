@@ -15,8 +15,8 @@ log = logging.getLogger(__name__)
 UPSTREAM = "https://energy-api.robinhawkes.com"
 BMU_IDS: list[str] = ["SOFWO-11", "SOFWO-12", "SOFWO-21", "SOFWO-22"]
 
-# How many days of history to fetch on a fresh database
-BACKFILL_DAYS = 365
+# Fixed start date for backfill — fetch all data from the farm's commissioning start
+BACKFILL_START = datetime(2026, 4, 1, tzinfo=timezone.utc)
 
 # Polite delay between upstream requests (seconds)
 _REQUEST_DELAY = 0.5
@@ -70,7 +70,7 @@ async def backfill() -> None:
                 latest.replace("Z", "+00:00")
             ).replace(tzinfo=timezone.utc)
         else:
-            start = now - timedelta(days=BACKFILL_DAYS)
+            start = BACKFILL_START
 
         days_needed = max(1, int((now - start).total_seconds() / 86400) + 1)
         log.info("Backfill: fetching %d days from %s", days_needed, start.date())

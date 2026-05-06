@@ -42,8 +42,8 @@ async def _lifespan(_app: FastAPI):
     await init_db()
     # Start backfill in the background so the server responds immediately.
     asyncio.create_task(backfill())
-    # Refresh every 48 hours to pull in newly confirmed metered data.
-    _scheduler.add_job(refresh, "interval", hours=48, id="sofia_refresh")
+    # Refresh every 15 minutes — Robinhawkes updates data every 15 minutes.
+    _scheduler.add_job(refresh, "interval", minutes=15, id="sofia_refresh")
     _scheduler.start()
     yield
     _scheduler.shutdown()
