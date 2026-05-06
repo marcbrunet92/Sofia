@@ -103,7 +103,6 @@ class SofiaWidgetProvider : AppWidgetProvider() {
             widgetId: Int,
             mw: Double? = null,
             status: String? = null,
-            source: String? = null
         ) {
             try {
                 val views = RemoteViews(context.packageName, R.layout.power_widget)
@@ -126,15 +125,10 @@ class SofiaWidgetProvider : AppWidgetProvider() {
                     views.setTextViewText(R.id.tv_widget_percent, "$percent%")
                     views.setTextViewText(R.id.tv_widget_mw, "${mw.toInt()} MW")
                     views.setTextViewText(R.id.tv_widget_status, status ?: "—")
-                    views.setTextViewText(
-                        R.id.tv_widget_source,
-                        if (source == "b1610") "Metered" else "Forecast"
-                    )
                 } else {
                     views.setTextViewText(R.id.tv_widget_percent, "—")
                     views.setTextViewText(R.id.tv_widget_mw, "— MW")
                     views.setTextViewText(R.id.tv_widget_status, "Updating…")
-                    views.setTextViewText(R.id.tv_widget_source, "")
                 }
 
                 manager.updateAppWidget(widgetId, views)
@@ -241,7 +235,6 @@ class WidgetRefreshWorker(
                     widgetId = id,
                     mw       = snapshot.latestMW,
                     status   = snapshot.statusLabel,
-                    source   = snapshot.source
                 )
             }
 

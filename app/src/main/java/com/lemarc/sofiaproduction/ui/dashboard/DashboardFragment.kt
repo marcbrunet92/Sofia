@@ -26,6 +26,7 @@ import com.lemarc.sofiaproduction.data.INSTALLED_MW
 import com.lemarc.sofiaproduction.databinding.FragmentDashboardBinding
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -162,10 +163,10 @@ class DashboardFragment : Fragment() {
             )
         )
 
-        // Last updated
         val updatedLabel = runCatching {
-            val inst = Instant.parse(snap.lastUpdated.replace(' ', 'T'))
-            hourFmt.format(inst) + " UTC"
+            val instant = Instant.parse(snap.lastUpdated.replace(' ', 'T'))
+            val zdt = instant.atZone(ZoneId.systemDefault())
+            "%02d:%02d".format(zdt.hour, zdt.minute)
         }.getOrDefault("—")
         binding.tvLastUpdated.text = getString(R.string.updated_template, updatedLabel)
 

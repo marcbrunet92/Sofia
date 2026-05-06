@@ -74,12 +74,5 @@
             android:text=" · "
             android:textColor="#40FFFFFF"
             android:textSize="10sp" />
-
-        <TextView
-            android:id="@+id/tv_widget_source"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#60FFFFFF"
-            android:textSize="10sp" />
     </LinearLayout>
 </LinearLayout>
