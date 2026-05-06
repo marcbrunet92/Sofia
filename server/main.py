@@ -38,7 +38,7 @@ _scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI):  # noqa: ARG001
+async def _lifespan(_app: FastAPI):
     await init_db()
     # Start backfill in the background so the server responds immediately.
     asyncio.create_task(backfill())

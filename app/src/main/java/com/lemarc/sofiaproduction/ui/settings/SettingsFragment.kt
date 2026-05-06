@@ -93,6 +93,9 @@ class SettingsFragment : Fragment() {
                         )
                     }
                 }
+                .onFailure {
+                    binding.tvSofiaApiDesc.text = getString(R.string.settings_api_sofia_desc_unavailable)
+                }
         }
     }
 

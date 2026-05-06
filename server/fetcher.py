@@ -86,8 +86,10 @@ async def backfill() -> None:
                         log.info(
                             "Backfill progress: %d / %d days", i + 1, days_needed
                         )
-                except Exception as exc:  # noqa: BLE001
+                except (httpx.HTTPError, httpx.TimeoutException, OSError) as exc:
                     log.warning("Backfill skip %s: %s", date_iso, exc)
+                except Exception as exc:
+                    log.error("Unexpected backfill error for %s: %r", date_iso, exc)
                 await asyncio.sleep(_REQUEST_DELAY)
 
         log.info("Backfill complete (%d days attempted)", days_needed)
@@ -112,7 +114,9 @@ async def refresh() -> None:
                 try:
                     slots = await _fetch_day(client, date_iso)
                     await upsert_slots(slots)
-                except Exception as exc:  # noqa: BLE001
+                except (httpx.HTTPError, httpx.TimeoutException, OSError) as exc:
                     log.warning("Refresh skip %s: %s", date_iso, exc)
+                except Exception as exc:
+                    log.error("Unexpected refresh error for %s: %r", date_iso, exc)
                 await asyncio.sleep(_REQUEST_DELAY)
         log.info("Refresh complete")

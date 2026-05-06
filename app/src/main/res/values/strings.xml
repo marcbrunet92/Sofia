@@ -47,6 +47,7 @@
     <string name="settings_api_sofia_label">API Sofia (sofia.lemarc.fr)</string>
     <string name="settings_api_sofia_desc">%1$d jours d\'historique de production</string>
     <string name="settings_api_sofia_desc_loading">Chargement de l\'historique disponible…</string>
+    <string name="settings_api_sofia_desc_unavailable">Historique disponible (serveur inaccessible)</string>
 
     <!-- Records card (Dashboard — Sofia API only) -->
     <string name="records_title">RECORDS DE PRODUCTION</string>
