@@ -1,0 +1,6 @@
+[submodule "Sofia_Android"]
+	path = Sofia_Android
+	url = https://github.com/marcbrunet92/Sofia_Android
+[submodule "Sofia_iOS"]
+	path = Sofia_iOS
+	url = https://github.com/marcbrunet92/Sofia_iOS
