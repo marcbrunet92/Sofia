@@ -1,9 +1,12 @@
 [submodule "Sofia_Android"]
 	path = Sofia_Android
 	url = https://github.com/marcbrunet92/Sofia_Android
+	branch = main
 [submodule "Sofia_iOS"]
 	path = Sofia_iOS
 	url = https://github.com/marcbrunet92/Sofia_iOS
+	branch = main
 [submodule "Sofia_Server"]
 	path = Sofia_Server
 	url = https://github.com/marcbrunet92/Sofia_Server
+	branch = master
