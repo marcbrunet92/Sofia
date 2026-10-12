@@ -1,0 +1,44 @@
+#!/bin/sh
+# Règle du superprojet Sofia : un commit = Android et iOS au même stade.
+#
+# Si un seul des deux pointeurs (Sofia_Android / Sofia_iOS) change dans le
+# commit, il est refusé, sauf si le message contient [android-only] ou
+# [ios-only] (correctif propre à une plateforme, sans impact fonctionnel).
+# Le pointeur Sofia_Server peut changer seul.
+#
+# Activation (une fois par clone) : git config core.hooksPath .githooks
+# Contournement ponctuel          : git commit --no-verify
+
+msg_file="$1"
+
+# Merge (git pull, git merge) : ne pas bloquer, les commits fusionnés ont déjà été vérifiés.
+[ -f "$(git rev-parse --git-path MERGE_HEAD)" ] && exit 0
+
+staged=$(git diff --cached --name-only)
+android=0
+ios=0
+printf '%s\n' "$staged" | grep -qx 'Sofia_Android' && android=1
+printf '%s\n' "$staged" | grep -qx 'Sofia_iOS' && ios=1
+
+[ "$android" = "$ios" ] && exit 0
+
+if [ "$android" = 1 ]; then
+    only="android"; changed="Sofia_Android"; missing="Sofia_iOS"
+else
+    only="ios"; changed="Sofia_iOS"; missing="Sofia_Android"
+fi
+
+grep -qiF "[$only-only]" "$msg_file" && exit 0
+
+cat >&2 <<EOF
+Commit refusé : le pointeur $changed change mais pas $missing.
+
+Un commit du dépôt Sofia doit signifier que les apps Android et iOS
+en sont au même stade. Au choix :
+  - porter la modification dans $missing, la commiter, puis
+    git add $missing
+  - si le changement ne concerne vraiment que cette plateforme,
+    ajouter [$only-only] dans le message de commit
+  - forcer exceptionnellement : git commit --no-verify
+EOF
+exit 1
