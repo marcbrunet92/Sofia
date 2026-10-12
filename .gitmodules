@@ -4,3 +4,6 @@
 [submodule "Sofia_iOS"]
 	path = Sofia_iOS
 	url = https://github.com/marcbrunet92/Sofia_iOS
+[submodule "Sofia_Server"]
+	path = Sofia_Server
+	url = https://github.com/marcbrunet92/Sofia_Server
