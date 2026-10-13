@@ -1,0 +1,1 @@
+mettre l'unité de la météo en km/h dans les deux apps (deja fait pour android)
